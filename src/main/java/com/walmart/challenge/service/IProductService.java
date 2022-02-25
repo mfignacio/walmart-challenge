@@ -17,9 +17,7 @@ public interface IProductService {
 
     Product getProductById(int id);
 
-    boolean isPalindrome(String search);
-
-    void applyDiscount(List<Product> searchResult);
+    void applyDiscountToProductList(List<Product> searchResult);
 
     void applyDiscountToSingleProduct(Product searchResult);
 }

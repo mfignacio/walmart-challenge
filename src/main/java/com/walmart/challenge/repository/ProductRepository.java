@@ -1,4 +1,4 @@
-package com.walmart.challenge.dao;
+package com.walmart.challenge.repository;
 
 import com.walmart.challenge.model.Product;
 
@@ -7,9 +7,9 @@ import org.springframework.data.mongodb.repository.Query;
 
 import java.util.List;
 
-public interface IProductDao extends MongoRepository<Product, String> {
+public interface ProductRepository extends MongoRepository<Product, String> {
 
-    Product findProductById(int id);
+    Product findFirstProductById(int id);
 
     @Query("{description:'?0'}")
     List<Product> findProductByDescription(String name);
