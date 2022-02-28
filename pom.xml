@@ -84,6 +84,7 @@
                 </configuration>
             </plugin>
         </plugins>
+        <finalName>walmart-challenge-docker</finalName>
     </build>
 
 </project>
