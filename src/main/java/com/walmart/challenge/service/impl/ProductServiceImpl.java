@@ -22,21 +22,6 @@ public class ProductServiceImpl implements IProductService {
     }
 
     @Override
-    public List<Product> getAllProducts() {
-        return productRepository.findAll();
-    }
-
-    @Override
-    public List<Product> getProductByDescription(String description) {
-        return productRepository.findProductByDescription(description);
-    }
-
-    @Override
-    public List<Product> getProductByBrand(String brand) {
-        return productRepository.findProductByBrand(brand);
-    }
-
-    @Override
     public List<Product> getProductByBrandAndDescription(String search) throws
             ResponseStatusException {
         if (!(search.length() >= Constants.MINIMUM_AMOUNT_OF_CHARS_PER_SEARCH)) {

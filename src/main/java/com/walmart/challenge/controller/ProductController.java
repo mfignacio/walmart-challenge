@@ -22,22 +22,14 @@ public class ProductController {
         this.productService = productService;
     }
 
-    @GetMapping("getAllProducts/")
+    @GetMapping("getProductById/{id}")
     public @ResponseBody
-    Iterable<Product> getAllProducts() {
-        return productService.getAllProducts();
-    }
-
-    @GetMapping("getProductByDescription/{description}")
-    public @ResponseBody
-    Iterable<Product> getProductByDescription(@PathVariable(value = "description") String description) {
-        return productService.getProductByDescription(description);
-    }
-
-    @GetMapping("getProductByBrand/{brand}")
-    public @ResponseBody
-    Iterable<Product> getProductByBrand(@PathVariable(value = "brand") String brand) {
-        return productService.getProductByBrand(brand);
+    Product getProductById(@PathVariable(value = "id") int id) {
+        Product searchResult = productService.getProductById(id);
+        if (searchResult != null && productService.shouldApplyDiscount(String.valueOf(id))) {
+            searchResult = productService.applyDiscountToSingleProduct(searchResult);
+        }
+        return searchResult;
     }
 
     @GetMapping("getProductByBrandAndDescription/{search}")
@@ -48,16 +40,6 @@ public class ProductController {
         List<Product> searchResult = productService.getProductByBrandAndDescription(search);
         if ((!searchResult.isEmpty()) && productService.shouldApplyDiscount(search)) {
             productService.applyDiscountToProductList(searchResult);
-        }
-        return searchResult;
-    }
-
-    @GetMapping("getProductById/{id}")
-    public @ResponseBody
-    Product getProductById(@PathVariable(value = "id") int id) {
-        Product searchResult = productService.getProductById(id);
-        if (searchResult != null && productService.shouldApplyDiscount(String.valueOf(id))) {
-            searchResult = productService.applyDiscountToSingleProduct(searchResult);
         }
         return searchResult;
     }
