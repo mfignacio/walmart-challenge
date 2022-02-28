@@ -17,7 +17,9 @@ public interface IProductService {
 
     Product getProductById(int id);
 
-    void applyDiscountToProductList(List<Product> searchResult);
+    List<Product> applyDiscountToProductList(List<Product> searchResult);
 
-    void applyDiscountToSingleProduct(Product searchResult);
+    Product applyDiscountToSingleProduct(Product searchResult);
+
+    boolean shouldApplyDiscount(String search);
 }

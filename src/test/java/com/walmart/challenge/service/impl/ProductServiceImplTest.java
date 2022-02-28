@@ -6,53 +6,62 @@ import com.walmart.challenge.repository.ProductRepository;
 import org.bson.types.ObjectId;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.when;
+import static org.mockito.MockitoAnnotations.openMocks;
 
-@ExtendWith(MockitoExtension.class)
 class ProductServiceImplTest {
+
+    private Product product1;
+    private Product product2;
+    private List<Product> productList;
+    private float originalPriceForProduct1;
+    private float originalPriceForProduct2;
 
     @Mock
     private ProductRepository productRepository;
 
-    @Autowired
     @InjectMocks
     private ProductServiceImpl productService;
-    private Product product1;
-    private Product product2;
-
-    List<Product> productList;
 
     @BeforeEach
-    public void setUp() {
+    void setUp() {
+        openMocks(this);
+        originalPriceForProduct1 = 498725;
+        originalPriceForProduct2 = 130173;
         productList = new ArrayList<>();
-        product1 = new Product(new ObjectId(),
-                               1,
-                               "ooy eqrceli",
-                               "dsaasd",
-                               "www.lider.cl/catalogo/images/whiteLineIcon.svg",
-                               498724);
-        product2 = new Product(new ObjectId(),
-                               2,
-                               "dsaasd",
-                               "zlrwax bñyrh",
-                               "www.lider.cl/catalogo/images/babyIcon.svg",
-                               130173);
+        product1 = Product.builder()
+                ._id(new ObjectId())
+                .id(1)
+                .brand("ooy eqrceli")
+                .description("dsaasd")
+                .image("www.lider.cl/catalogo/images/whiteLineIcon.svg")
+                .price(originalPriceForProduct1)
+                .build();
+        product2 = Product.builder()
+                ._id(new ObjectId())
+                .id(2)
+                .brand("dsaasd")
+                .description("zlrwax bñyrh")
+                .image("www.lider.cl/catalogo/images/babyIcon.svg")
+                .price(originalPriceForProduct2)
+                .build();
 
         productList.add(product1);
         productList.add(product2);
@@ -70,43 +79,74 @@ class ProductServiceImplTest {
 
     @Test
     void shouldGetProductByIdSuccessfully() {
-        Mockito.when(productRepository.findFirstProductById(1)).thenReturn(product1);
+        int id = 1;
+        Mockito.when(productRepository.findFirstProductById(id)).thenReturn(product1);
 
-        Product productResult = productService.getProductById(1);
+        Product productResult = productService.getProductById(id);
 
-        assertThat(productService.getProductById(product1.getId())).isEqualTo(productResult);
+        assertEquals(productService.getProductById(product1.getId()), productResult);
     }
 
     @Test
     void shouldGetProductsByBrandAndDescriptionSuccessfully() {
-        when(productRepository.getProductByBrandAndDescription("saas")).thenReturn(productList);
+        String searchTerm = "saas";
+        when(productRepository.getProductByBrandAndDescription(searchTerm)).thenReturn(productList);
 
-        List<Product> productList1 = productService.getProductByBrandAndDescription("saas");
+        List<Product> productList1 = productService.getProductByBrandAndDescription(searchTerm);
 
         assertEquals(productList1, productList);
-        Mockito.verify(productRepository, times(1)).getProductByBrandAndDescription("saas");
+        Mockito.verify(productRepository, times(1)).getProductByBrandAndDescription(searchTerm);
     }
 
+    @ParameterizedTest
+    @ValueSource(strings = { "a", "aa" })
+    void shouldThrowExceptionWhenSearchStringIsLessThanThreeCharacters(String searchTerm) {
+        Exception exception = assertThrows(ResponseStatusException.class, () -> {
+            productService.getProductByBrandAndDescription(searchTerm);
+        });
 
+        String expectedMessage = "Minimum amount of chars for searching is three (3). Please search again using at least three (3) characters.";
+        String actualMessage = exception.getMessage();
 
-    /*
+        assertTrue(actualMessage.contains(expectedMessage));
+        assertEquals(((ResponseStatusException) exception).getStatus(), HttpStatus.NOT_FOUND);
+    }
+
+    @Test
+    void shouldApplyDiscountToSingleProductSuccessfully() {
+        float discountedPrice = originalPriceForProduct1 / 2;
+
+        Product discountedProduct = productService.applyDiscountToSingleProduct(product1);
+
+        assertNotNull(discountedProduct);
+        assertEquals(discountedProduct.getPrice(), discountedPrice);
+    }
+
     @Test
     void shouldApplyDiscountToProductListSuccessfully() {
-        List<Product> originalProductList = productList;
+        float discountedPriceForProduct1 = originalPriceForProduct1 / 2;
+        float discountedPriceForProduct2 = originalPriceForProduct2 / 2;
 
-        productService.applyDiscountToProductList(productList);
+        List<Product> discountedProductList = productService.applyDiscountToProductList(productList);
 
-        for (int i = 0; i < productList.size(); i++) {
-            assertEquals(productList.get(i).getPrice(), originalProductList.get(i).getPrice() / 2);
-        }
+        assertNotNull(discountedProductList);
+        assertEquals(discountedProductList.get(0).getPrice(), discountedPriceForProduct1);
+        assertEquals(discountedProductList.get(1).getPrice(), discountedPriceForProduct2);
 
     }
 
-    @Test
-    void shouldApplyDiscountSingleProductSuccessfully() {
-        Product originalProduct = product1;
-        productService.applyDiscountToSingleProduct(product1);
-        assertEquals(product1.getPrice(), originalProduct.getPrice()/2);
+    @ParameterizedTest
+    @ValueSource(strings = { "191", "abba" })
+    void shouldApplyDiscountBasedOnSearchSuccessfully(String search) {
+
+        assertTrue(productService.shouldApplyDiscount(search));
     }
-    */
+
+    @ParameterizedTest
+    @ValueSource(strings = { "123", "hello" })
+    void shouldNotApplyDiscountBasedOnSearchSuccessfully(String search) {
+
+        assertFalse(productService.shouldApplyDiscount(search));
+    }
+
 }

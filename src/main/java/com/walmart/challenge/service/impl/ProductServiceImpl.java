@@ -10,29 +10,30 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
+import java.util.stream.IntStream;
 
 @Service
 public class ProductServiceImpl implements IProductService {
 
-    private ProductRepository productDao;
+    private ProductRepository productRepository;
 
-    public ProductServiceImpl(ProductRepository productDao) {
-        this.productDao = productDao;
+    public ProductServiceImpl(ProductRepository productRepository) {
+        this.productRepository = productRepository;
     }
 
     @Override
     public List<Product> getAllProducts() {
-        return productDao.findAll();
+        return productRepository.findAll();
     }
 
     @Override
     public List<Product> getProductByDescription(String description) {
-        return productDao.findProductByDescription(description);
+        return productRepository.findProductByDescription(description);
     }
 
     @Override
     public List<Product> getProductByBrand(String brand) {
-        return productDao.findProductByBrand(brand);
+        return productRepository.findProductByBrand(brand);
     }
 
     @Override
@@ -43,22 +44,39 @@ public class ProductServiceImpl implements IProductService {
                     HttpStatus.NOT_FOUND,
                     "Minimum amount of chars for searching is three (3). Please search again using at least three (3) characters.");
         } else {
-            return productDao.getProductByBrandAndDescription(search);
+            return productRepository.getProductByBrandAndDescription(search);
         }
     }
 
     @Override
     public Product getProductById(int id) {
-        return productDao.findFirstProductById(id);
+        return productRepository.findFirstProductById(id);
     }
 
     @Override
-    public void applyDiscountToProductList(List<Product> searchResult) {
-        searchResult.forEach(result -> result.setPrice(result.getPrice() / 2));
+    public List<Product> applyDiscountToProductList(List<Product> searchResult) {
+        searchResult.forEach(result -> result.setPrice(result.getPrice() / 2f));
+        return searchResult;
     }
 
     @Override
-    public void applyDiscountToSingleProduct(Product searchResult) {
-        searchResult.setPrice(searchResult.getPrice() / 2);
+    public Product applyDiscountToSingleProduct(Product searchResult) {
+        searchResult.setPrice(searchResult.getPrice() / 2f);
+        return searchResult;
+    }
+
+    @Override
+    public boolean shouldApplyDiscount(String search) {
+        return isPalindrome(search);
+    }
+
+    private boolean isPalindrome(String text) {
+        if (text.length() >= Constants.MINIMUM_AMOUNT_OF_CHARS_PER_SEARCH) {
+            String temp = text.replaceAll("\\s+", "").toLowerCase();
+            return IntStream.range(0, temp.length() / 2)
+                    .noneMatch(i -> temp.charAt(i) != temp.charAt(temp.length() - i - 1));
+        } else {
+            return false;
+        }
     }
 }

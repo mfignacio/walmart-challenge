@@ -6,49 +6,87 @@ import org.bson.types.ObjectId;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.runner.RunWith;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.mockito.Mock;
 import org.springframework.boot.test.autoconfigure.data.mongo.DataMongoTest;
 import org.springframework.test.context.junit4.SpringRunner;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertNotNull;
+import static org.mockito.Mockito.when;
 
 @RunWith(SpringRunner.class)
 @DataMongoTest
 class ProductRepositoryTest {
 
-    @Autowired
+    @Mock
     private ProductRepository productRepository;
+
+    private Product savedProduct1;
+    private Product savedProduct2;
+    private List<Product> savedProductsList;
 
     @BeforeEach
     void setUp() {
+        savedProductsList = new ArrayList<>();
+        savedProduct1 = Product.builder()
+                ._id(new ObjectId())
+                .id(1)
+                .brand("Samsung")
+                .description("Samsung Smart TV")
+                .image("www.lider.cl/catalogo/images/samsungSmartTV.svg")
+                .price(600000f)
+                .build();
+        savedProduct2 = Product.builder()
+                ._id(new ObjectId())
+                .id(2)
+                .brand("Philips Smart")
+                .description("Philips TV")
+                .image("www.lider.cl/catalogo/images/philipsSmartTV.svg")
+                .price(500000f)
+                .build();
+        productRepository.save(savedProduct1);
+        productRepository.save(savedProduct2);
+        savedProductsList.add(savedProduct1);
+        savedProductsList.add(savedProduct2);
     }
 
     @Test
-    void shouldFindProductByIdSuccessfully() {
-        Product foundProduct = productRepository.findFirstProductById(1);
+    void shouldReturnFirstSavedProduct() {
+        when(productRepository.findFirstProductById(1)).thenReturn(savedProduct1);
 
-        assertEquals(foundProduct.get_id(), new ObjectId("6217cf868647b48a2f904bb0"));
-        assertEquals(foundProduct.getId(), 1);
-        assertEquals(foundProduct.getBrand(), "ooy eqrceli");
-        assertEquals(foundProduct.getDescription(), "rlñlw brhrka");
-        assertEquals(foundProduct.getImage(), "www.lider.cl/catalogo/images/whiteLineIcon.svg");
-        assertEquals(foundProduct.getPrice(), 498724);
+        Product firstFoundProduct = productRepository.findFirstProductById(1);
 
+        assertNotNull(firstFoundProduct);
+        assertNotNull(firstFoundProduct.get_id());
+        assertEquals(firstFoundProduct.getId(), 1);
+        assertEquals(firstFoundProduct.getBrand(), "Samsung");
+        assertEquals(firstFoundProduct.getDescription(), "Samsung Smart TV");
+        assertEquals(firstFoundProduct.getImage(), "www.lider.cl/catalogo/images/samsungSmartTV.svg");
+        assertEquals(firstFoundProduct.getPrice(), 600000.0, 0);
     }
 
     @Test
     void shouldGetProductByBrandAndDescriptionSuccessfully() {
-        List<Product> productList = productRepository.getProductByBrandAndDescription("saas");
+        when(productRepository.getProductByBrandAndDescription("Smart")).thenReturn(savedProductsList);
 
-        assertTrue(productList.size() > 0);
-        assertEquals(productList.get(0).get_id(), new ObjectId("6217cf868647b48a2f904bb1"));
-        assertEquals(productList.get(0).getPrice(), 130173);
-        assertEquals(productList.get(0).getImage(), "www.lider.cl/catalogo/images/babyIcon.svg");
-        assertEquals(productList.get(0).getDescription(), "zlrwax bñyrh");
-        assertEquals(productList.get(0).getBrand(), "dsaasd");
+        List<Product> productList = productRepository.getProductByBrandAndDescription("Smart");
 
+        assertNotNull(productList);
+        assertNotNull(productList.get(0).get_id());
+        assertEquals(productList.get(0).getId(), 1);
+        assertEquals(productList.get(0).getBrand(), "Samsung");
+        assertEquals(productList.get(0).getDescription(), "Samsung Smart TV");
+        assertEquals(productList.get(0).getImage(), "www.lider.cl/catalogo/images/samsungSmartTV.svg");
+        assertEquals(productList.get(0).getPrice(), 600000.0, 0);
+
+        assertNotNull(productList.get(1).get_id());
+        assertEquals(productList.get(1).getId(), 2);
+        assertEquals(productList.get(1).getBrand(), "Philips Smart");
+        assertEquals(productList.get(1).getDescription(), "Philips TV");
+        assertEquals(productList.get(1).getImage(), "www.lider.cl/catalogo/images/philipsSmartTV.svg");
+        assertEquals(productList.get(1).getPrice(), 500000.0, 0);
     }
 }
