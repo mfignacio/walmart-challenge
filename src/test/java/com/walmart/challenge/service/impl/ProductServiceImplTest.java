@@ -68,6 +68,16 @@ class ProductServiceImplTest {
     }
 
     @Test
+    void shouldGetAllProductsSuccessfully() {
+        when(productRepository.findAll()).thenReturn(productList);
+
+        List<Product> productList1 = productService.getAllProducts();
+
+        assertEquals(productList1, productList);
+        Mockito.verify(productRepository, times(1)).findAll();
+    }
+
+    @Test
     void shouldGetProductByIdSuccessfully() {
         int id = 1;
         Mockito.when(productRepository.findFirstProductById(id)).thenReturn(product1);

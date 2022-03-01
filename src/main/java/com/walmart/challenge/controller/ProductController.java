@@ -22,6 +22,12 @@ public class ProductController {
         this.productService = productService;
     }
 
+    @GetMapping("getAllProducts/")
+    public @ResponseBody
+    Iterable<Product> getAllProducts() {
+        return productService.getAllProducts();
+    }
+
     @GetMapping("getProductById/{id}")
     public @ResponseBody
     Product getProductById(@PathVariable(value = "id") int id) {

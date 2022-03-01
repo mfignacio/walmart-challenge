@@ -9,6 +9,8 @@ import java.util.List;
 
 public interface ProductRepository extends MongoRepository<Product, String> {
 
+    List<Product> findAll();
+
     Product findFirstProductById(int id);
 
     @Query("{'$or':[ {'brand':{'$regex' : ?0, '$options' : 'i'}}, {'description':{'$regex' : ?0, '$options' : 'i'}} ]}")

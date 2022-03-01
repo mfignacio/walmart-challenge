@@ -1,0 +1,14 @@
+version: "3"
+services:
+  spring-walmart:
+    image: spring-walmart:1.0
+    container_name: spring-walmart
+    ports:
+      - 8080:8080
+    links:
+      - mongodb-docker-walmart
+  mongodb-docker-walmart:
+      image: mongo:latest
+      container_name: "mongodb-docker-walmart"
+      ports:
+        - 27017:27017

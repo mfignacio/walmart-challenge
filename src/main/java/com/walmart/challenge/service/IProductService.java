@@ -8,6 +8,8 @@ import java.util.List;
 
 public interface IProductService {
 
+    List<Product> getAllProducts();
+
     Product getProductById(int id);
 
     List<Product> getProductByBrandAndDescription(String search) throws ResponseStatusException;
